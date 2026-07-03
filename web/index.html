@@ -1,13 +1,282 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chika Pet</title>
-    <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chika Pet</title>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <style>
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Arial, sans-serif;
+      background: radial-gradient(circle at top, #ffe38a, #ff9f1c 45%, #7a3b00);
+      color: #2b1600;
+      padding: 18px;
+      text-align: center;
+    }
+
+    .app {
+      max-width: 430px;
+      margin: 0 auto;
+    }
+
+    .card {
+      background: rgba(255, 255, 255, 0.78);
+      border-radius: 30px;
+      padding: 22px;
+      box-shadow: 0 20px 45px rgba(0,0,0,.25);
+      backdrop-filter: blur(12px);
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: 32px;
+    }
+
+    .user {
+      font-weight: bold;
+      opacity: .75;
+      margin-bottom: 16px;
+    }
+
+    input {
+      width: 100%;
+      padding: 15px;
+      margin: 8px 0;
+      border: 0;
+      border-radius: 18px;
+      font-size: 16px;
+      outline: none;
+    }
+
+    button {
+      width: 100%;
+      padding: 16px;
+      margin: 9px 0;
+      border: 0;
+      border-radius: 20px;
+      font-size: 17px;
+      font-weight: bold;
+      background: #ff8500;
+      color: white;
+      box-shadow: 0 7px 0 #b85d00;
+    }
+
+    button:active {
+      transform: translateY(4px);
+      box-shadow: 0 3px 0 #b85d00;
+    }
+
+    .pet {
+      font-size: 110px;
+      margin: 10px 0;
+      animation: float 2s infinite ease-in-out;
+    }
+
+    @keyframes float {
+      0% { transform: translateY(0) rotate(-3deg); }
+      50% { transform: translateY(-12px) rotate(3deg); }
+      100% { transform: translateY(0) rotate(-3deg); }
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin: 15px 0;
+    }
+
+    .stat {
+      background: rgba(255,255,255,.75);
+      border-radius: 20px;
+      padding: 12px;
+      font-weight: bold;
+    }
+
+    .bar {
+      height: 18px;
+      background: rgba(0,0,0,.15);
+      border-radius: 20px;
+      overflow: hidden;
+      margin: 12px 0;
+    }
+
+    .fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #ff7b00, #ffe600);
+      transition: .4s;
+    }
+
+    .small {
+      font-size: 14px;
+      opacity: .75;
+    }
+
+    .hidden {
+      display: none;
+    }
+  </style>
 </head>
 <body>
-    <h1>Добро пожаловать в Chika Pet!</h1>
-    <script src="script.js"></script>
+<div class="app">
+  <div class="card">
+    <h1>🐣 Chika Pet</h1>
+    <div class="user" id="userText">Загрузка пользователя...</div>
+
+    <div id="setup">
+      <p>Создай общего Чику с другом. Кормите его каждый день и держите стрик 🔥</p>
+
+      <input id="petName" placeholder="Имя питомца, например Боба">
+      <input id="friendName" placeholder="@username друга">
+
+      <button onclick="createPet()">➕ Создать питомца</button>
+      <button onclick="inviteFriend()">📨 Пригласить друга</button>
+
+      <p class="small">Пока это тестовая версия. Данные сохраняются на этом устройстве.</p>
+    </div>
+
+    <div id="game" class="hidden">
+      <div class="pet" id="petEmoji">🥚</div>
+      <h2 id="petTitle">Чика</h2>
+      <p id="friendText"></p>
+      <h3 id="stageText">Стадия: Яйцо</h3>
+
+      <div class="stats">
+        <div class="stat">🔥 <span id="streak">0</span> дней</div>
+        <div class="stat">🍗 <span id="feeds">0</span> кормлений</div>
+        <div class="stat">💪 <span id="power">0</span> сила</div>
+        <div class="stat">❤️ <span id="joy">50</span>% радость</div>
+      </div>
+
+      <div class="bar">
+        <div class="fill" id="progress"></div>
+      </div>
+
+      <button onclick="feedPet()">🍗 Покормить</button>
+      <button onclick="trainPet()">💪 Тренировка</button>
+      <button onclick="petPet()">❤️ Погладить</button>
+      <button onclick="inviteFriend()">📨 Позвать друга</button>
+      <button onclick="resetPet()">🗑 Сбросить тест</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  const tg = window.Telegram?.WebApp;
+  if (tg) tg.expand();
+
+  const tgUser = tg?.initDataUnsafe?.user;
+  const username = tgUser?.username ? "@" + tgUser.username : "тестовый пользователь";
+
+  document.getElementById("userText").innerText = "Игрок: " + username;
+
+  let pet = JSON.parse(localStorage.getItem("chika_pet")) || null;
+
+  function save() {
+    localStorage.setItem("chika_pet", JSON.stringify(pet));
+  }
+
+  function createPet() {
+    const petName = document.getElementById("petName").value.trim() || "Чика";
+    const friendName = document.getElementById("friendName").value.trim() || "@friend";
+
+    pet = {
+      owner: username,
+      name: petName,
+      friend: friendName,
+      streak: 0,
+      feeds: 0,
+      power: 0,
+      joy: 50,
+      lastFeed: ""
+    };
+
+    save();
+    render();
+  }
+
+  function getStage(feeds) {
+    if (feeds < 5) return ["🥚", "Яйцо", 20];
+    if (feeds < 15) return ["🐣", "Птенец", 45];
+    if (feeds < 30) return ["🐥", "Молодой Чика", 70];
+    if (feeds < 60) return ["🐔", "Взрослый Чика", 90];
+    return ["👑", "Легендарный Чика", 100];
+  }
+
+  function feedPet() {
+    const today = new Date().toDateString();
+
+    if (pet.lastFeed === today) {
+      alert("Сегодня уже покормили 🍗");
+      return;
+    }
+
+    pet.lastFeed = today;
+    pet.feeds += 1;
+    pet.streak += 1;
+    pet.joy = Math.min(100, pet.joy + 10);
+
+    if (tg?.HapticFeedback) tg.HapticFeedback.impactOccurred("medium");
+
+    save();
+    render();
+  }
+
+  function trainPet() {
+    pet.power += 1;
+    pet.joy = Math.max(0, pet.joy - 3);
+    save();
+    render();
+    alert("💪 Чика стал сильнее!");
+  }
+
+  function petPet() {
+    pet.joy = Math.min(100, pet.joy + 15);
+    save();
+    render();
+    alert("❤️ Чика доволен!");
+  }
+
+  function inviteFriend() {
+    const text = encodeURIComponent("🐣 Давай растить общего Чику и держать стрик вместе!");
+    const url = encodeURIComponent("https://t.me/ChikaStreakBot");
+    window.open("https://t.me/share/url?url=" + url + "&text=" + text, "_blank");
+  }
+
+  function resetPet() {
+    localStorage.removeItem("chika_pet");
+    pet = null;
+    render();
+  }
+
+  function render() {
+    if (!pet) {
+      document.getElementById("setup").classList.remove("hidden");
+      document.getElementById("game").classList.add("hidden");
+      return;
+    }
+
+    const [emoji, stage, progress] = getStage(pet.feeds);
+
+    document.getElementById("setup").classList.add("hidden");
+    document.getElementById("game").classList.remove("hidden");
+
+    document.getElementById("petEmoji").innerText = emoji;
+    document.getElementById("petTitle").innerText = pet.name;
+    document.getElementById("friendText").innerText = "Друг: " + pet.friend;
+    document.getElementById("stageText").innerText = "Стадия: " + stage;
+    document.getElementById("streak").innerText = pet.streak;
+    document.getElementById("feeds").innerText = pet.feeds;
+    document.getElementById("power").innerText = pet.power;
+    document.getElementById("joy").innerText = pet.joy;
+    document.getElementById("progress").style.width = progress + "%";
+  }
+
+  render();
+</script>
 </body>
 </html>

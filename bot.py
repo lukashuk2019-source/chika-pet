@@ -9,7 +9,7 @@ from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
 
 
-TOKEN = "8744326055:AAHJ3_f08j4rnuKw_rNCaOHs1Zc0E5g7vQg"
+TOKEN = "8744326055:AAEVJS7uxq-cebQZTwr3Gpx2hupvriqA79Y"
 
 # Для реального Telegram Mini App нужна HTTPS-ссылка.
 # Потом сюда вставишь ссылку с хостинга/ngrok.
