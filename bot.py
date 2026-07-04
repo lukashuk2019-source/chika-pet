@@ -13,7 +13,7 @@ TOKEN = "8744326055:AAEVJS7uxq-cebQZTwr3Gpx2hupvriqA79Y"
 
 # Для реального Telegram Mini App нужна HTTPS-ссылка.
 # Потом сюда вставишь ссылку с хостинга/ngrok.
-WEB_APP_URL = "https://example.com"
+WEB_APP_URL = "https://chika-pet.vercel.app"
 
 logging.basicConfig(level=logging.INFO)
 
