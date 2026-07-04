@@ -7,41 +7,30 @@
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
     * { box-sizing: border-box; }
-
     body {
       margin: 0;
       min-height: 100vh;
       font-family: Arial, sans-serif;
-      background: radial-gradient(circle at top, #ffe38a, #ff9f1c 45%, #7a3b00);
+      background: radial-gradient(circle at top, #ffe58a, #ff9f1c 45%, #6f3600);
       color: #2b1600;
       padding: 18px;
       text-align: center;
     }
-
-    .app {
-      max-width: 430px;
-      margin: 0 auto;
-    }
-
+    .app { max-width: 430px; margin: 0 auto; }
     .card {
-      background: rgba(255, 255, 255, 0.78);
+      background: rgba(255,255,255,.82);
       border-radius: 30px;
       padding: 22px;
       box-shadow: 0 20px 45px rgba(0,0,0,.25);
-      backdrop-filter: blur(12px);
     }
-
-    h1 {
-      margin: 0 0 8px;
-      font-size: 32px;
+    h1 { margin: 0 0 8px; font-size: 30px; }
+    .note {
+      background: rgba(255, 199, 44, .35);
+      border-radius: 16px;
+      padding: 10px;
+      font-size: 13px;
+      margin: 12px 0;
     }
-
-    .user {
-      font-weight: bold;
-      opacity: .75;
-      margin-bottom: 16px;
-    }
-
     input {
       width: 100%;
       padding: 15px;
@@ -51,11 +40,10 @@
       font-size: 16px;
       outline: none;
     }
-
     button {
       width: 100%;
       padding: 16px;
-      margin: 9px 0;
+      margin: 8px 0;
       border: 0;
       border-radius: 20px;
       font-size: 17px;
@@ -64,103 +52,97 @@
       color: white;
       box-shadow: 0 7px 0 #b85d00;
     }
-
     button:active {
       transform: translateY(4px);
       box-shadow: 0 3px 0 #b85d00;
     }
-
-    .pet {
-      font-size: 110px;
-      margin: 10px 0;
+    .pet-wrap {
+      height: 190px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 12px 0;
+    }
+    #petGif {
+      max-width: 180px;
+      max-height: 180px;
+      display: none;
+      border-radius: 22px;
+    }
+    #petEmoji {
+      font-size: 115px;
       animation: float 2s infinite ease-in-out;
     }
-
     @keyframes float {
       0% { transform: translateY(0) rotate(-3deg); }
       50% { transform: translateY(-12px) rotate(3deg); }
       100% { transform: translateY(0) rotate(-3deg); }
     }
-
-    .stats {
+    .bond {
+      background: linear-gradient(135deg, #ffd84d, #ff9f1c);
+      color: #3b2100;
+      border-radius: 24px;
+      padding: 14px;
+      margin: 12px 0;
+      font-size: 22px;
+      font-weight: 900;
+    }
+    .players {
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 10px;
-      margin: 15px 0;
+      margin: 14px 0;
     }
-
-    .stat {
+    .player {
       background: rgba(255,255,255,.75);
       border-radius: 20px;
       padding: 12px;
       font-weight: bold;
     }
-
-    .bar {
-      height: 18px;
-      background: rgba(0,0,0,.15);
-      border-radius: 20px;
-      overflow: hidden;
-      margin: 12px 0;
-    }
-
-    .fill {
-      height: 100%;
-      width: 0%;
-      background: linear-gradient(90deg, #ff7b00, #ffe600);
-      transition: .4s;
-    }
-
-    .small {
-      font-size: 14px;
-      opacity: .75;
-    }
-
-    .hidden {
-      display: none;
-    }
+    .ok { color: #159947; }
+    .wait { color: #777; }
+    .hidden { display: none; }
+    .small { opacity: .75; font-size: 14px; }
+    .danger { background: #d93636; box-shadow: 0 7px 0 #8f1e1e; }
+    .admin { background: #222; box-shadow: 0 7px 0 #000; }
   </style>
 </head>
 <body>
 <div class="app">
   <div class="card">
-    <h1>🐣 Chika Pet</h1>
-    <div class="user" id="userText">Загрузка пользователя...</div>
+    <h1>🐣 ChikaPad</h1>
+    <div class="note">🚧 Сейчас используются временные анимации. Мы создаём фирменного Чику и собственный стикерпак.</div>
 
     <div id="setup">
-      <p>Создай общего Чику с другом. Кормите его каждый день и держите стрик 🔥</p>
-
+      <p>Создай Чику с другом. Серия начнётся только когда друг присоединится.</p>
       <input id="petName" placeholder="Имя питомца, например Боба">
       <input id="friendName" placeholder="@username друга">
-
-      <button onclick="createPet()">➕ Создать питомца</button>
+      <button onclick="createPet()">➕ Создать Чику</button>
       <button onclick="inviteFriend()">📨 Пригласить друга</button>
-
-      <p class="small">Пока это тестовая версия. Данные сохраняются на этом устройстве.</p>
     </div>
 
     <div id="game" class="hidden">
-      <div class="pet" id="petEmoji">🥚</div>
+      <div class="pet-wrap" ondblclick="petPet()">
+        <img id="petGif" src="" alt="Chika animation">
+        <div id="petEmoji">🥚</div>
+      </div>
+
       <h2 id="petTitle">Чика</h2>
-      <p id="friendText"></p>
-      <h3 id="stageText">Стадия: Яйцо</h3>
+      <div class="bond">💛 Связь: <span id="bondDays">0</span> дней</div>
+      <p id="statusText">Ждём друга.</p>
 
-      <div class="stats">
-        <div class="stat">🔥 <span id="streak">0</span> дней</div>
-        <div class="stat">🍗 <span id="feeds">0</span> кормлений</div>
-        <div class="stat">💪 <span id="power">0</span> сила</div>
-        <div class="stat">❤️ <span id="joy">50</span>% радость</div>
+      <div class="players">
+        <div class="player">Ты <span id="meStatus" class="wait">⏳</span></div>
+        <div class="player">Друг <span id="friendStatus" class="wait">⏳</span></div>
       </div>
 
-      <div class="bar">
-        <div class="fill" id="progress"></div>
-      </div>
-
-      <button onclick="feedPet()">🍗 Покормить</button>
-      <button onclick="trainPet()">💪 Тренировка</button>
+      <button onclick="feedMe()">🍗 Покормить</button>
+      <button onclick="trainPet()">💪 Потренировать</button>
       <button onclick="petPet()">❤️ Погладить</button>
       <button onclick="inviteFriend()">📨 Позвать друга</button>
-      <button onclick="resetPet()">🗑 Сбросить тест</button>
+
+      <button class="admin" onclick="adminPanel()">⚙️ Admin test</button>
+      <button class="danger" onclick="resetPet()">🗑 Сбросить тест</button>
     </div>
   </div>
 </div>
@@ -169,15 +151,39 @@
   const tg = window.Telegram?.WebApp;
   if (tg) tg.expand();
 
+  const ADMIN_USERNAME = "lukashuk2019";
   const tgUser = tg?.initDataUnsafe?.user;
-  const username = tgUser?.username ? "@" + tgUser.username : "тестовый пользователь";
-
-  document.getElementById("userText").innerText = "Игрок: " + username;
+  const username = tgUser?.username ? "@" + tgUser.username : "@test_user";
 
   let pet = JSON.parse(localStorage.getItem("chika_pet")) || null;
 
+  const animations = {
+    idle: "animations/idle.gif",
+    happy: "animations/happy.gif",
+    eat: "animations/eat.gif",
+    train: "animations/train.gif",
+    sleep: "animations/sleep.gif",
+    dead: "animations/dead.gif",
+    revive: "animations/revive.gif"
+  };
+
   function save() {
     localStorage.setItem("chika_pet", JSON.stringify(pet));
+  }
+
+  function playAnimation(name, fallbackEmoji) {
+    const img = document.getElementById("petGif");
+    const emoji = document.getElementById("petEmoji");
+    img.onerror = function() {
+      img.style.display = "none";
+      emoji.style.display = "block";
+      emoji.innerText = fallbackEmoji || "🐣";
+    };
+    img.onload = function() {
+      img.style.display = "block";
+      emoji.style.display = "none";
+    };
+    img.src = animations[name] + "?t=" + Date.now();
   }
 
   function createPet() {
@@ -185,66 +191,84 @@
     const friendName = document.getElementById("friendName").value.trim() || "@friend";
 
     pet = {
-      owner: username,
       name: petName,
+      owner: username,
       friend: friendName,
-      streak: 0,
-      feeds: 0,
-      power: 0,
-      joy: 50,
-      lastFeed: ""
+      bond: 0,
+      meFed: false,
+      friendFed: false,
+      joined: false,
+      dead: false,
+      lastDay: new Date().toDateString()
     };
 
     save();
     render();
+    playAnimation("idle", "🥚");
   }
 
-  function getStage(feeds) {
-    if (feeds < 5) return ["🥚", "Яйцо", 20];
-    if (feeds < 15) return ["🐣", "Птенец", 45];
-    if (feeds < 30) return ["🐥", "Молодой Чика", 70];
-    if (feeds < 60) return ["🐔", "Взрослый Чика", 90];
-    return ["👑", "Легендарный Чика", 100];
-  }
-
-  function feedPet() {
-    const today = new Date().toDateString();
-
-    if (pet.lastFeed === today) {
-      alert("Сегодня уже покормили 🍗");
+  function feedMe() {
+    if (!pet) return;
+    if (pet.dead) {
+      alert("Чика умер. Используй восстановление.");
+      playAnimation("dead", "💀");
       return;
     }
 
-    pet.lastFeed = today;
-    pet.feeds += 1;
-    pet.streak += 1;
-    pet.joy = Math.min(100, pet.joy + 10);
+    pet.meFed = true;
+    playAnimation("eat", "🍗");
 
-    if (tg?.HapticFeedback) tg.HapticFeedback.impactOccurred("medium");
+    if (pet.friendFed || isAdmin()) {
+      pet.bond += 1;
+      pet.meFed = false;
+      pet.friendFed = false;
+      pet.joined = true;
+      document.getElementById("statusText").innerText = "🎉 День засчитан! Чика счастлив.";
+      playAnimation("happy", "🐣");
+    } else {
+      document.getElementById("statusText").innerText = "Ты покормил. Ждём друга.";
+    }
 
     save();
     render();
   }
 
   function trainPet() {
-    pet.power += 1;
-    pet.joy = Math.max(0, pet.joy - 3);
-    save();
-    render();
-    alert("💪 Чика стал сильнее!");
+    playAnimation("train", "💪");
+    alert("💪 Чика потренировался!");
   }
 
   function petPet() {
-    pet.joy = Math.min(100, pet.joy + 15);
-    save();
-    render();
+    playAnimation("happy", "❤️");
     alert("❤️ Чика доволен!");
   }
 
   function inviteFriend() {
-    const text = encodeURIComponent("🐣 Давай растить общего Чику и держать стрик вместе!");
+    const text = encodeURIComponent("🐣 Давай растить общего Чику и держать связь вместе!");
     const url = encodeURIComponent("https://t.me/ChikaStreakBot");
     window.open("https://t.me/share/url?url=" + url + "&text=" + text, "_blank");
+  }
+
+  function isAdmin() {
+    return username.toLowerCase().includes(ADMIN_USERNAME.toLowerCase()) || username === "@test_user";
+  }
+
+  function adminPanel() {
+    if (!isAdmin()) {
+      alert("Админка доступна только владельцу.");
+      return;
+    }
+    const action = prompt(
+      "ADMIN:\n1 — друг покормил\n2 — +10 дней связи\n3 — убить Чику\n4 — воскресить Чику"
+    );
+
+    if (action === "1") pet.friendFed = true;
+    if (action === "2") pet.bond += 10;
+    if (action === "3") { pet.dead = true; playAnimation("dead", "💀"); }
+    if (action === "4") { pet.dead = false; playAnimation("revive", "🐣"); }
+
+    save();
+    render();
   }
 
   function resetPet() {
@@ -260,20 +284,32 @@
       return;
     }
 
-    const [emoji, stage, progress] = getStage(pet.feeds);
-
     document.getElementById("setup").classList.add("hidden");
     document.getElementById("game").classList.remove("hidden");
 
-    document.getElementById("petEmoji").innerText = emoji;
     document.getElementById("petTitle").innerText = pet.name;
-    document.getElementById("friendText").innerText = "Друг: " + pet.friend;
-    document.getElementById("stageText").innerText = "Стадия: " + stage;
-    document.getElementById("streak").innerText = pet.streak;
-    document.getElementById("feeds").innerText = pet.feeds;
-    document.getElementById("power").innerText = pet.power;
-    document.getElementById("joy").innerText = pet.joy;
-    document.getElementById("progress").style.width = progress + "%";
+    document.getElementById("bondDays").innerText = pet.bond;
+
+    document.getElementById("meStatus").innerText = pet.meFed ? "✅" : "⏳";
+    document.getElementById("friendStatus").innerText = pet.friendFed ? "✅" : "⏳";
+
+    if (pet.dead) {
+      document.getElementById("statusText").innerText = pet.name + " умер. Можно восстановить через админку.";
+      playAnimation("dead", "💀");
+      return;
+    }
+
+    if (!pet.joined) {
+      document.getElementById("statusText").innerText = "Ждём друга. Серия ещё не началась.";
+      playAnimation("idle", "🥚");
+    } else if (pet.meFed) {
+      document.getElementById("statusText").innerText = "Ты покормил. Ждём друга.";
+    } else if (pet.friendFed) {
+      document.getElementById("statusText").innerText = "Друг уже покормил. Теперь твоя очередь.";
+    } else {
+      document.getElementById("statusText").innerText = pet.name + " ждёт кормления.";
+      playAnimation("idle", "🐣");
+    }
   }
 
   render();
